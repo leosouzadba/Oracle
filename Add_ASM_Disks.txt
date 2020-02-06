@@ -1,0 +1,63 @@
+oracleasm createdisk DATA022 /dev/sdau1
+Writing disk header: done
+Instantiating disk: done
+
+[root@srvsaorac1 ~]# oracleasm scandisks
+Reloading disk partitions: done
+Cleaning any stale ASM disks...
+Scanning system for ASM disks...
+[root@srvsaorac1 ~]# oracleasm listdisks
+ARCH01
+ARCH02
+ARCH03
+ARCH04
+ARCH05
+BKP01
+BKP02
+BKP03
+BKP04
+BKP05
+BKP06
+BKP07
+BKP08
+BKP09
+BKP10
+DATA001
+DATA002
+DATA003
+DATA004
+DATA005
+DATA006
+DATA007
+DATA008
+DATA009
+DATA010
+DATA011
+DATA012
+DATA013
+DATA014
+DATA015
+DATA016
+DATA017
+DATA018
+DATA019
+DATA020
+DATA021
+DATA022
+OCR01
+OCR02
+OCR03
+OCR04
+OCR05
+REDO01
+TEMP01
+UNDO01
+
+[root@srvsaorac1 ~]# oracleasm querydisk DATA022
+Disk "DATA022" is a valid ASM disk
+
+
+SQL> ALTER DISKGROUP DATA ADD DISK 'ORCL:DATA022' REBALANCE POWER 11;
+
+Diskgroup altered.
+
