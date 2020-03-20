@@ -1,0 +1,118 @@
+------------------------
+-- Executar TFA e AHF --
+------------------------
+
+cd /u01/app/software/oracle.ahf/bin
+
+./tfactl diagcollect -from "2019-11-19 08:00:00" -to "2019-11-19 22:00:00"
+
+cd /opt/oracle/oak/oswbb/archive/
+
+find . -name '*19.11.19*' -exec zip /tmp/osw_`hostname -a`.zip {} \;
+
+
+----------------------------------------
+-- Chamar a ILOM por linha de comando --
+----------------------------------------
+
+ipmitool sunoem cli
+
+
+------------------------
+-- Rodar o orasundiag --
+------------------------
+
+/root/Extras/
+
+./odasundiag.sh
+
+
+---------------------------
+-- Reiniciar o DCS Agent --
+---------------------------
+
+initctl stop initdcsagent
+
+initctl start initdcsagent
+
+
+----------------------------------------------
+-- Reiniciar o ASR Manager Doc ID 2040525.1 --
+----------------------------------------------
+
+cd /opt/asrmanager/bin/
+
+./asr
+
+start
+
+--> Ou ir no nรณ 1 e executar:
+
+service asrm restart
+
+
+odacli test-asr
+
+
+----------------------------------
+-- Resetar a senha do oda-admin --
+----------------------------------
+
+odacli-adm set-credential --password --username oda-admin
+
+[root@mploda01-sp01 ~]# odacli-adm set-credential --password --username oda-admin
+Agent password: W3lC0me1#_
+
+
+
+
+--------------------
+-- Resize do /u01 --
+--------------------
+
+[root@mploda02-rj01 /]# df -m /u01
+Filesystem           1M-blocks  Used Available Use% Mounted on
+/dev/mapper/VolGroupSys-LogVolU01
+                        100666 79198     16348  83% /u01
+[root@mploda02-rj01 /]# pvdisplay
+  --- Physical volume ---
+  PV Name               /dev/md1
+  VG Name               VolGroupSys
+  PV Size               446.03 GiB / not usable 29.00 MiB
+  Allocatable           yes
+  PE Size               32.00 MiB
+  Total PE              14272
+  Free PE               7424
+  Allocated PE          6848
+  PV UUID               ophduq-27Ko-CqEJ-81fL-kFqk-iGh1-BOvhLk
+
+[root@mploda02-rj01 /]# lvdisplay /dev/mapper/VolGroupSys-LogVolU01
+  --- Logical volume ---
+  LV Path                /dev/VolGroupSys/LogVolU01
+  LV Name                LogVolU01
+  VG Name                VolGroupSys
+  LV UUID                9vnqXx-lExY-8up8-matl-vN2J-19RX-wVZm2F
+  LV Write Access        read/write
+  LV Creation host, time localhost.localdomain, 2019-06-10 09:59:02 -0300
+  LV Status              available
+  # open                 1
+  LV Size                100.00 GiB
+  Current LE             3200
+  Segments               1
+  Allocation             inherit
+  Read ahead sectors     auto
+  - currently set to     256
+  Block device           249:55
+
+[root@mploda02-rj01 /]# lvextend --size +50G /dev/mapper/VolGroupSys-LogVolU01
+  Size of logical volume VolGroupSys/LogVolU01 changed from 100.00 GiB (3200 extents) to 150.00 GiB (4800 extents).
+  Logical volume LogVolU01 successfully resized.
+
+[root@mploda02-rj01 /]# resize2fs /dev/VolGroupSys/LogVolU01
+resize2fs 1.43-WIP (20-Jun-2013)
+Filesystem at /dev/VolGroupSys/LogVolU01 is mounted on /u01; on-line resizing required
+old_desc_blocks = 7, new_desc_blocks = 10
+Performing an on-line resize of /dev/VolGroupSys/LogVolU01 to 39321600 (4k) blocks.
+The filesystem on /dev/VolGroupSys/LogVolU01 is now 39321600 blocks long.
+
+
