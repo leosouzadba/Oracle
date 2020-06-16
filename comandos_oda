@@ -1,118 +1,111 @@
-------------------------
--- Executar TFA e AHF --
-------------------------
-
-cd /u01/app/software/oracle.ahf/bin
-
-./tfactl diagcollect -from "2019-11-19 08:00:00" -to "2019-11-19 22:00:00"
-
-cd /opt/oracle/oak/oswbb/archive/
-
-find . -name '*19.11.19*' -exec zip /tmp/osw_`hostname -a`.zip {} \;
+------------------
+-- Comandos ODA --
+------------------
 
 
-----------------------------------------
--- Chamar a ILOM por linha de comando --
-----------------------------------------
+Stop e Start do ASR Manager:
+
+Solaris:
+
+svcadm disable asrm
+svcadm enable asrm
+Linux:
+
+service asrm stop
+service asrm start
+
+==============================================================
+
+Restart do DCS Agent:
+
+As root user execute below steps to restart dcs-agent
+# initctl status initdcsagent
+# initctl stop initdcsagent
+# initctl start initdcsagent
+# initctl status initdcsagent
+
+==============================================================
+
+Stop Start do OSWatcher:
+
+/opt/oracle/oak/oswbb/stopOSWbb.sh
+
+/opt/oracle/oak/oswbb/startOSWbb.sh 10 504 gzip
+
+
+For questions on install/usage please go to MOS (Note:301137.1)
+
+==============================================================
+
+Acessar a ILOM via linha de comando
 
 ipmitool sunoem cli
+Connected. Use ^D to exit.
+-> show /SP/network
+
+/SP/network
+   Targets:
+       interconnect
+       ipv6
+       test
+
+   Properties:
+       commitpending = (Cannot show property)
+       dhcp_clientid = none
+       dhcp_server_ip = none
+       ipaddress = 10.1.20.100
+       ipdiscovery = static
+       ipgateway = 10.1.20.1
+       ipnetmask = 255.255.255.0
+       macaddress = 00:10:E0:BF:6D:B6
+       managementport = MGMT
+       outofbandmacaddress = 00:10:E0:BF:6D:B6
+       pendingipaddress = 10.1.20.100
+       pendingipdiscovery = static
+       pendingipgateway = 10.1.20.1
+       pendingipnetmask = 255.255.255.0
+       pendingmanagementport = MGMT
+       pendingvlan_id = (none)
+       sidebandmacaddress = 00:10:E0:BF:6D:B7
+       state = enabled
+       vlan_id = (none)
+
+   Commands:
+       cd
+       set
+       show
 
 
-------------------------
--- Rodar o orasundiag --
-------------------------
+==============================================================
 
-/root/Extras/
+Atualizar a quantidade de CPUs
 
-./odasundiag.sh
+[root@odademo ~]# odacli describe-cpucore
 
+Node  Cores  Modified                       Job Status    
+----- ------ ------------------------------ ---------------
+0     8      February 23, 2017 12:23:26 PM EET Configured    
 
----------------------------
--- Reiniciar o DCS Agent --
----------------------------
+[root@odademo ~]# odacli update-cpucore --cores 4
+reduction in number of cores is not supported
 
-initctl stop initdcsagent
+However, there is force argument which makes us force this action.
 
-initctl start initdcsagent
+Here ->
 
+[root@odademo ~]# odacli update-cpucore --cores 4 --force
+{
+  "jobId" : "9d294bfd-e582-4484-a75c-621b4ac1c2ca",
+  "status" : "Created",
+  "message" : null,
+  "reports" : [ ],
+  "createTimestamp" : "February 25, 2017 10:46:59 AM EET",
+  "description" : "CPU cores  service update",
+  "updatedTime" : "February 25, 2017 10:46:59 AM EET"
+}
 
-----------------------------------------------
--- Reiniciar o ASR Manager Doc ID 2040525.1 --
-----------------------------------------------
+[root@odademo ~]# odacli describe-cpucore
 
-cd /opt/asrmanager/bin/
-
-./asr
-
-start
-
---> Ou ir no nรณ 1 e executar:
-
-service asrm restart
-
-
-odacli test-asr
-
-
-----------------------------------
--- Resetar a senha do oda-admin --
-----------------------------------
-
-odacli-adm set-credential --password --username oda-admin
-
-[root@mploda01-sp01 ~]# odacli-adm set-credential --password --username oda-admin
-Agent password: W3lC0me1#_
-
-
-
-
---------------------
--- Resize do /u01 --
---------------------
-
-[root@mploda02-rj01 /]# df -m /u01
-Filesystem           1M-blocks  Used Available Use% Mounted on
-/dev/mapper/VolGroupSys-LogVolU01
-                        100666 79198     16348  83% /u01
-[root@mploda02-rj01 /]# pvdisplay
-  --- Physical volume ---
-  PV Name               /dev/md1
-  VG Name               VolGroupSys
-  PV Size               446.03 GiB / not usable 29.00 MiB
-  Allocatable           yes
-  PE Size               32.00 MiB
-  Total PE              14272
-  Free PE               7424
-  Allocated PE          6848
-  PV UUID               ophduq-27Ko-CqEJ-81fL-kFqk-iGh1-BOvhLk
-
-[root@mploda02-rj01 /]# lvdisplay /dev/mapper/VolGroupSys-LogVolU01
-  --- Logical volume ---
-  LV Path                /dev/VolGroupSys/LogVolU01
-  LV Name                LogVolU01
-  VG Name                VolGroupSys
-  LV UUID                9vnqXx-lExY-8up8-matl-vN2J-19RX-wVZm2F
-  LV Write Access        read/write
-  LV Creation host, time localhost.localdomain, 2019-06-10 09:59:02 -0300
-  LV Status              available
-  # open                 1
-  LV Size                100.00 GiB
-  Current LE             3200
-  Segments               1
-  Allocation             inherit
-  Read ahead sectors     auto
-  - currently set to     256
-  Block device           249:55
-
-[root@mploda02-rj01 /]# lvextend --size +50G /dev/mapper/VolGroupSys-LogVolU01
-  Size of logical volume VolGroupSys/LogVolU01 changed from 100.00 GiB (3200 extents) to 150.00 GiB (4800 extents).
-  Logical volume LogVolU01 successfully resized.
-
-[root@mploda02-rj01 /]# resize2fs /dev/VolGroupSys/LogVolU01
-resize2fs 1.43-WIP (20-Jun-2013)
-Filesystem at /dev/VolGroupSys/LogVolU01 is mounted on /u01; on-line resizing required
-old_desc_blocks = 7, new_desc_blocks = 10
-Performing an on-line resize of /dev/VolGroupSys/LogVolU01 to 39321600 (4k) blocks.
-The filesystem on /dev/VolGroupSys/LogVolU01 is now 39321600 blocks long.
-
-
+Node  Cores  Modified                       Job Status    
+----- ------ ------------------------------ ---------------
+0     4      February 25, 2017 10:47:02 AM EET Configured
